@@ -19,43 +19,65 @@ if ( args.h ) {
 process.exit(0)
 }
 
-//grabbing lattitude and longitude
-const latitude = (args.n || (args.s * -1))
-const longitude = (args.e || (args.w * -1))
-
-// checking if there is a timezone, if not default to guessing
-const timezone = moment.tz.guess();
-
-// checking what day, if there's no day default to 1
-const day = 1
-if (args.d != null) {
-	day = args.d 
-}
-
-// Make a request
-const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + latitude + '&longitude=' + longitude + '&daily=precipitation_hours&temperature_unit=fahrenheit&timezone=' + timezone);
-
-const data = await response.json();
-
-if (args.j) {
-	console.log(data);
-process.exit(0);
-}
-
-console.log('You ');
-
-if (data.daily.precipitation_hours[day] > 0) {
-	console.log('probably need your galoshes')
-}
 else {
-	console.log('probably dont need your galoshes')
-}
+    let timezone = moment.tz.guess();
 
-if (day == 0) {
-  console.log("today.")
-} else if (day > 1) {
-  console.log("in " + day + " days.")
-} else {
-  console.log("tomorrow.")
-}
+    let longitude = 1;
+    let latitude = 1;
 
+    if ("n" in args) {
+        latitude = args.n;
+    }
+    else if ("s" in args) {
+        latitude = -args.s;
+    } else {
+        console.log("Latitude must be in range");
+    }
+
+    if ("e" in args) {
+        longitude = args.e;
+    }
+    else if ("w" in args) {
+        longitude = -args.w;
+    } else {
+        console.log("Longitude must be in range");
+    }
+
+    if ("z" in args) {
+        timezone = args.z
+    }
+
+    let day = 1;
+
+
+    if ("d" in args) {
+        day = args.d;
+    }
+
+    let url = "https://api.open-meteo.com/v1/forecast?";
+    url = url + 'latitude=' + latitude + '&longitude=' + longitude + "&timezone=" + timezone + "&daily=precipitation_hours"
+    const response = await fetch(url);
+    const data = await response.json();
+
+
+    if ("j" in args) {
+        console.log(data);
+    } else {
+        let precipitation = data.daily.precipitation_hours
+        precipitation = precipitation[day];
+        let string = ""
+        if (precipitation == 0) {
+            string += "You will not need your galoshes "
+        } else {
+            string += "You might need your galoshes "
+        }
+        if (day == 0) {
+            string += "today."
+        } else if (day == 1) {
+            string += "tomorrow."
+        } else {
+            string += "in " + days + " days."
+        }
+        console.log(string)
+    }
+}
